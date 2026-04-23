@@ -1,0 +1,7 @@
+native/build/
+native/out/
+server/target/
+server/data/
+*.mv.db
+*.trace.db
+.DS_Store
