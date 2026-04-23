@@ -1,0 +1,14 @@
+#!/bin/sh
+# Minimal Maven Wrapper launcher (Unix). Requires JDK 17+.
+MAVEN_PROJECTBASEDIR="$(cd "$(dirname "$0")" && pwd)"
+WRAPPER_JAR="$MAVEN_PROJECTBASEDIR/.mvn/wrapper/maven-wrapper.jar"
+
+if [ -n "$JAVA_HOME" ]; then
+  JAVACMD="$JAVA_HOME/bin/java"
+else
+  JAVACMD=java
+fi
+
+exec "$JAVACMD" -classpath "$WRAPPER_JAR" \
+  "-Dmaven.multiModuleProjectDirectory=$MAVEN_PROJECTBASEDIR" \
+  org.apache.maven.wrapper.MavenWrapperMain "$@"

@@ -7,13 +7,13 @@ Learning stack: a **C** `tvcs` CLI for **CSV snapshot checkpoints**, a **Java** 
 | Layer | Role |
 |--------|------|
 | `native/` | **`tvcs`** — content-addressed CSV folders, ordered checkpoint chain, branch refs |
-| `server/` | **Hub** — REST API, catalog DB, runs `tvcs` for repo operations |
+| `server/` | **Hub** — REST API, catalog DB, runs repo ops via native `tvcs` or embedded Java |
 | `sql/catalog.sql` | **Documented** catalog schema (mirrored by JPA) |
 
 ### Boundary (v1)
 
 - **C**: files under `<repo>/.tvcs/` (checkpoints, snapshot blobs, refs).
-- **Java**: HTTP + JDBC catalog; **no** JNI — invokes `tvcs` via `ProcessBuilder`.
+- **Java**: HTTP + JDBC catalog; **no** JNI. With `tabularhub.tvcs.mode=auto` (default), the hub uses the native `tvcs` executable when it resolves on `PATH` (or absolute path); otherwise a **built-in Java engine** writes the same layout so the service runs with only a JDK.
 - **SQL**: `repo_registry` (id, name, slug, filesystem path, created_at).
 
 ### On-disk model (tvcs)
@@ -30,16 +30,27 @@ cmake -S . -B build
 cmake --build build
 ```
 
-Put `build/tvcs` (or `build\Release\tvcs.exe` with MSVC) on your `PATH`, or set `tabularhub.tvcs.executable` to the full path when running the server.
+Building the native CLI is **optional** for the hub: the default `auto` mode falls back to pure Java when `tvcs` is not installed.
+
+If you do build it, put `build/tvcs` (or `build\Release\tvcs.exe` with MSVC) on your `PATH`, or set `tabularhub.tvcs.executable` to the full path. Force behavior with `tabularhub.tvcs.mode=embedded` or `native`.
 
 ## Run the hub (Java 17+)
 
 ```bash
 cd server
-mvn spring-boot:run
+mvnw.cmd spring-boot:run
 ```
 
+(On Unix, install Maven or add a `mvnw` script; `mvn spring-boot:run` also works if Maven is installed.)
+
 Defaults: catalog at `./data/hub.mv.db`, repos under `./data/repos/<uuid>/`.
+
+### Verify (tests)
+
+```bash
+cd server
+mvnw.cmd test
+```
 
 ## API (v1)
 
