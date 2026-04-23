@@ -74,3 +74,15 @@ tvcs checkout ./myrepo main ./out
 ## Roadmap (if you extend this)
 
 - Row-level diffs, three-way merge, stronger hashes (e.g. SHA-256), packfiles, authenticated upload/download, richer SQL serving — each is a sizable project.
+
+## Publish to GitHub
+
+This repo is already initialized with `main` and an initial commit. On GitHub, create a **new empty** repository (no README or license from the wizard). Then:
+
+```bash
+cd /path/to/mini-dolthub
+git remote add origin https://github.com/<your-username>/<repo-name>.git
+git push -u origin main
+```
+
+Replace `<your-username>` and `<repo-name>` (for example `tabular-hub`). If the folder is still named `mini-dolthub`, you can rename it later after closing anything that has the folder open.
