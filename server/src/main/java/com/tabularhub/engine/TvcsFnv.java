@@ -5,7 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-/** FNV-1a 64-bit and 16-hex formatting matching the native `tvcs` implementation. */
+// same fnv idea as native/tvcs — keep in sync if you change one
 public final class TvcsFnv {
 
   private static final BigInteger MASK64 = BigInteger.ONE.shiftLeft(64).subtract(BigInteger.ONE);
@@ -59,7 +59,7 @@ public final class TvcsFnv {
               .sorted()
               .toList();
       if (names.isEmpty()) {
-        throw new TvcsException("no .csv files in staging", -1, "");
+        throw new TvcsException("no csvs in that folder", -1, "");
       }
       BigInteger h = OFFSET;
       for (String name : names) {

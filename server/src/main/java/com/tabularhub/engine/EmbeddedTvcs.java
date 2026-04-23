@@ -9,10 +9,6 @@ import java.util.List;
 import java.util.Locale;
 import org.springframework.stereotype.Component;
 
-/**
- * Pure-Java implementation of the {@code tvcs} CLI so the hub runs without a native binary.
- * On-disk layout matches the C tool.
- */
 @Component
 public class EmbeddedTvcs {
 
@@ -20,7 +16,7 @@ public class EmbeddedTvcs {
 
   public String run(List<String> args) {
     if (args.isEmpty()) {
-      throw new TvcsException("tvcs: missing command", -1, "");
+      throw new TvcsException("missing subcommand", -1, "");
     }
     try {
       return switch (args.get(0)) {
@@ -28,7 +24,7 @@ public class EmbeddedTvcs {
         case "commit" -> cmdCommit(args);
         case "log" -> cmdLog(args);
         case "head" -> cmdHead(args);
-        default -> throw new TvcsException("unknown tvcs command: " + args.get(0), -1, "");
+        default -> throw new TvcsException("huh? " + args.get(0), -1, "");
       };
     } catch (IOException e) {
       throw new TvcsException(e.getMessage(), -1, e.toString());
@@ -67,7 +63,7 @@ public class EmbeddedTvcs {
               .sorted()
               .toList();
       if (names.isEmpty()) {
-        throw new TvcsException("no .csv files in staging", -1, "");
+        throw new TvcsException("staging folder has no csvs", -1, "");
       }
       Path snapDir = root.resolve(".tvcs/objects/snapshots").resolve(snap);
       Files.createDirectories(snapDir);
@@ -81,7 +77,7 @@ public class EmbeddedTvcs {
     long epoch = Instant.now().getEpochSecond();
     String body = String.format(Locale.ROOT, "parent %s\nsnapshot %s\ntime %d\nmessage %s\n", parent, snap, epoch, msg);
     if (body.length() > 8192) {
-      throw new TvcsException("commit message too long", -1, "");
+      throw new TvcsException("message is huge, shorten it", -1, "");
     }
     String commitId = TvcsFnv.fnv1aHex(body.getBytes(StandardCharsets.UTF_8));
     Path commitFile = root.resolve(".tvcs/objects/commits").resolve(commitId);
@@ -101,7 +97,7 @@ public class EmbeddedTvcs {
     while (!"NONE".equals(cur)) {
       Path commitPath = root.resolve(".tvcs/objects/commits").resolve(cur);
       if (!Files.isRegularFile(commitPath)) {
-        throw new TvcsException("missing commit object", -1, "");
+        throw new TvcsException("commit file vanished (?)", -1, "");
       }
       String data = Files.readString(commitPath, StandardCharsets.UTF_8);
       out.append("commit ").append(cur).append('\n');
@@ -132,7 +128,7 @@ public class EmbeddedTvcs {
       }
       cur = cur.getParent();
     }
-    throw new TvcsException("not a repository", -1, "");
+    throw new TvcsException("no .tvcs here", -1, "");
   }
 
   private static String readHeadBranch(Path root) throws IOException {
@@ -145,7 +141,7 @@ public class EmbeddedTvcs {
         return r.substring(prefix.length()).trim();
       }
     }
-    throw new TvcsException("read HEAD", -1, "");
+    throw new TvcsException("HEAD looks wrong", -1, "");
   }
 
   private static String readRefCommit(Path root, String branch) throws IOException {

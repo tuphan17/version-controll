@@ -1,99 +1,53 @@
-# tabular-hub (v1 scaffold)
+# version-controll
 
-Learning stack: a **C** `tvcs` CLI for **CSV snapshot checkpoints**, a **Java** Spring Boot **service** with a small REST API, and **SQL** (H2) for project metadata in the hub.
+side project — small spring app + a tiny C program (`tvcs`) that snapshots folders of csvs into a `.tvcs` directory. kinda git-ish but dumb on purpose.
 
-## Layout
+**What's where:** `native/` is the cli, `server/` is the http api, `sql/catalog.sql` is mostly reference (jpa creates the real tables anyway).
 
-| Layer | Role |
-|--------|------|
-| `native/` | **`tvcs`** — content-addressed CSV folders, ordered checkpoint chain, branch refs |
-| `server/` | **Hub** — REST API, catalog DB, runs repo ops via native `tvcs` or embedded Java |
-| `sql/catalog.sql` | **Documented** catalog schema (mirrored by JPA) |
+The java side can run **without** building the C binary: if `tvcs` isn't on your PATH it falls back to java that writes the same files. Set `tabularhub.tvcs.mode=embedded` to force that, or `native` if you only want the exe.
 
-### Boundary (v1)
+**On disk:** commits live under `.tvcs/objects/commits`, csv copies under `objects/snapshots/<id>/`, branch tips in `refs/heads/...`. commit ids are fnv1a hex — fine for messing around, don't treat it like a real hash.
 
-- **C**: files under `<repo>/.tvcs/` (checkpoints, snapshot blobs, refs).
-- **Java**: HTTP + JDBC catalog; **no** JNI. With `tabularhub.tvcs.mode=auto` (default), the hub uses the native `tvcs` executable when it resolves on `PATH` (or absolute path); otherwise a **built-in Java engine** writes the same layout so the service runs with only a JDK.
-- **SQL**: `repo_registry` (id, name, slug, filesystem path, created_at).
-
-### On-disk model (tvcs)
-
-- `objects/snapshots/<snapshot_id>/` — copies of `*.csv` from a staging directory.
-- `objects/commits/<commit_id>` — text: `parent`, `snapshot`, `time`, `message`; id = FNV-1a hex of body (demo-grade, not cryptographic).
-- `refs/heads/<branch>` — tip commit hash or `NONE`.
-
-## Build `tvcs`
+### build the C tool (optional)
 
 ```bash
 cd native
-cmake -S . -B build
-cmake --build build
+cmake -S . -B build && cmake --build build
+# or: make   (needs gcc/clang)
 ```
 
-Building the native CLI is **optional** for the hub: the default `auto` mode falls back to pure Java when `tvcs` is not installed.
+then put `tvcs` on PATH or point `tabularhub.tvcs.executable` at it.
 
-If you do build it, put `build/tvcs` (or `build\Release\tvcs.exe` with MSVC) on your `PATH`, or set `tabularhub.tvcs.executable` to the full path. Force behavior with `tabularhub.tvcs.mode=embedded` or `native`.
+### run the server
 
-## Run the hub (Java 17+)
+need jdk 17+.
 
 ```bash
 cd server
-mvnw.cmd spring-boot:run
+./mvnw spring-boot:run    # unix — chmod +x mvnw if needed
 ```
 
-(On Unix, install Maven or add a `mvnw` script; `mvn spring-boot:run` also works if Maven is installed.)
+windows: `mvnw.cmd spring-boot:run`
 
-Defaults: catalog at `./data/hub.mv.db`, repos under `./data/repos/<uuid>/`.
+data ends up in `server/data/` (h2 file + repo folders).
 
-### Verify (tests)
+tests: `mvnw test` / `mvnw.cmd test`
 
-```bash
-cd server
-mvnw.cmd test
-```
+### http endpoints
 
-## API (v1)
+- `POST /api/v1/repos` — `{"name":"whatever"}`
+- `POST /api/v1/repos/{id}/commits` — json with `message` and `tables` map of `filename.csv -> contents`
+- `GET .../log` and `.../head` — text-ish status
 
-- `POST /api/v1/repos` — body `{"name":"My project"}` → creates repo + `tvcs init`.
-- `POST /api/v1/repos/{id}/commits` — body:
-
-```json
-{
-  "message": "load users",
-  "tables": {
-    "users.csv": "id,name\n1,Ada\n"
-  }
-}
-```
-
-- `GET /api/v1/repos/{id}/log` — plain text from `tvcs log`.
-- `GET /api/v1/repos/{id}/head` — `branch <commit>`.
-- `GET /api/v1/repos` / `GET /api/v1/repos/{id}` — catalog.
-
-## CLI examples
+### cli quick test
 
 ```bash
 tvcs init ./myrepo
-echo 'id,name' > ./staging/users.csv
-echo '1,Ada' >> ./staging/users.csv
-tvcs commit ./myrepo "first import" ./staging
+mkdir -p staging && echo 'x,y' > staging/a.csv
+tvcs commit ./myrepo "wip" ./staging
 tvcs log ./myrepo
-tvcs head ./myrepo
-tvcs checkout ./myrepo main ./out
 ```
 
-## Roadmap (if you extend this)
+---
 
-- Row-level diffs, three-way merge, stronger hashes (e.g. SHA-256), packfiles, authenticated upload/download, richer SQL serving — each is a sizable project.
-
-## Publish to GitHub
-
-This repo is already initialized with `main` and an initial commit. On GitHub, create a **new empty** repository (no README or license from the wizard). Then:
-
-```bash
-cd /path/to/mini-dolthub
-git remote add origin https://github.com/<your-username>/<repo-name>.git
-git push -u origin main
-```
-
-Replace `<your-username>` and `<repo-name>` (for example `tabular-hub`). If the folder is still named `mini-dolthub`, you can rename it later after closing anything that has the folder open.
+repo on github: [tuphan17/version-controll](https://github.com/tuphan17/version-controll)

@@ -9,7 +9,7 @@ IF DEFINED JAVA_HOME SET "JAVACMD=%JAVA_HOME%\bin\java.exe"
 
 "%JAVACMD%" -version >NUL 2>&1
 IF ERRORLEVEL 1 (
-  ECHO java not found. Install JDK 17+ and set JAVA_HOME or PATH.
+  ECHO no java — install a jdk 17+ and fix PATH / JAVA_HOME
   EXIT /B 1
 )
 

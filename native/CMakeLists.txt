@@ -1,3 +1,4 @@
+# tvcs — cmake build, or just `make` in this folder if you have gcc
 cmake_minimum_required(VERSION 3.16)
 project(tabular_vc C)
 

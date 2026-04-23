@@ -49,14 +49,14 @@ public class RepoService {
     RepoRecord r =
         repoRecordRepository
             .findById(id)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "repo not found"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "no repo with that id"));
     return toResponse(r);
   }
 
   @Transactional
   public RepoResponse create(CreateRepoRequest req) {
     if (req.getName() == null || req.getName().isBlank()) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "name required");
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "need a name");
     }
     String id = UUID.randomUUID().toString();
     Path reposRoot = hubProperties.getReposRoot().toAbsolutePath().normalize();
@@ -64,7 +64,7 @@ public class RepoService {
     try {
       Files.createDirectories(reposRoot);
     } catch (IOException e) {
-      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "cannot create repos root");
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "couldn't mkdir repos root");
     }
     String slug = allocateSlug(req.getName());
     tvcsRunner.run(Path.of(".").toAbsolutePath(), List.of("init", repoPath.toString()));
@@ -83,21 +83,21 @@ public class RepoService {
     RepoRecord row =
         repoRecordRepository
             .findById(repoId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "repo not found"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "no repo with that id"));
     if (req.getMessage() == null || req.getMessage().isBlank()) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "message required");
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "need a commit message");
     }
     if (req.getTables() == null || req.getTables().isEmpty()) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "tables required");
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "pass some tables");
     }
     Path root = Path.of(row.getFilesystemPath());
     try {
-      Path staging = Files.createTempDirectory("tabularhub-staging-");
+      Path staging = Files.createTempDirectory("tvcs-staging-");
       try {
         for (var e : req.getTables().entrySet()) {
           String name = e.getKey();
           if (!name.toLowerCase(Locale.ROOT).endsWith(".csv")) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "table keys must end with .csv");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "keys should be *.csv");
           }
           Files.writeString(staging.resolve(name), e.getValue(), StandardCharsets.UTF_8);
         }
@@ -111,7 +111,7 @@ public class RepoService {
           deleteRecursive(staging);
       }
     } catch (IOException e) {
-      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "staging failed");
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "temp staging blew up");
     }
   }
 
@@ -119,7 +119,7 @@ public class RepoService {
     RepoRecord row =
         repoRecordRepository
             .findById(repoId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "repo not found"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "no repo with that id"));
     Path root = Path.of(row.getFilesystemPath());
     return tvcsRunner.run(Path.of(".").toAbsolutePath(), List.of("log", root.toString()));
   }
@@ -128,7 +128,7 @@ public class RepoService {
     RepoRecord row =
         repoRecordRepository
             .findById(repoId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "repo not found"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "no repo with that id"));
     Path root = Path.of(row.getFilesystemPath());
     return tvcsRunner.run(Path.of(".").toAbsolutePath(), List.of("head", root.toString()));
   }

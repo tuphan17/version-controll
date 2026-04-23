@@ -15,7 +15,7 @@
   <artifactId>tabular-hub-server</artifactId>
   <version>0.1.0-SNAPSHOT</version>
   <name>tabular-hub-server</name>
-  <description>Java hub service and C tvcs CLI for CSV snapshot repos (v1)</description>
+  <description>spring api + tvcs snapshots</description>
 
   <properties>
     <java.version>17</java.version>

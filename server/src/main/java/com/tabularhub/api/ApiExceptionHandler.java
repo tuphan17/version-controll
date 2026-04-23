@@ -16,7 +16,7 @@ public class ApiExceptionHandler {
     String msg = ex.getMessage() == null ? "" : ex.getMessage();
     String detail = ex.getStderr() == null ? "" : ex.getStderr();
     Map<String, Object> body = new LinkedHashMap<>();
-    body.put("error", "tvcs_failed");
+    body.put("error", "tvcs_error");
     body.put("message", msg);
     body.put("exitCode", ex.getExitCode());
     body.put("detail", detail);

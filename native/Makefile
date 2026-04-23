@@ -1,4 +1,4 @@
-# Optional: build without CMake — requires a C99 compiler (gcc or clang).
+# gcc path if you don't wanna cmake
 CFLAGS ?= -std=c99 -Wall -Wextra -pedantic -Iinclude
 SRC = src/tvcs.c src/fsutil.c src/hash.c src/repo.c
 

@@ -1,5 +1,4 @@
--- Hub metadata (users, billing, etc. can extend this later).
--- Applied by Spring JPA from entities; this file documents the v1 catalog.
+-- rough sketch of what jpa makes; don't rely on this file for migrations
 
 CREATE TABLE repo_registry (
     id VARCHAR(36) PRIMARY KEY,

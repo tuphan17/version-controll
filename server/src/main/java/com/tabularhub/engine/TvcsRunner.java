@@ -87,16 +87,16 @@ public class TvcsRunner {
       boolean finished = p.waitFor(60, TimeUnit.SECONDS);
       if (!finished) {
         p.destroyForcibly();
-        throw new TvcsException("tvcs timed out", -1, "");
+        throw new TvcsException("tvcs took forever, killed it", -1, "");
       }
       String text = new String(out, StandardCharsets.UTF_8).trim();
       int code = p.exitValue();
       if (code != 0) {
-        throw new TvcsException("tvcs failed: " + text, code, text);
+        throw new TvcsException("tvcs died: " + text, code, text);
       }
       return text;
     } catch (IOException e) {
-      throw new TvcsException(e.getMessage() == null ? "tvcs io error" : e.getMessage(), -1, "");
+      throw new TvcsException(e.getMessage() == null ? "couldn't spawn tvcs" : e.getMessage(), -1, "");
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new TvcsException("interrupted", -1, "");
